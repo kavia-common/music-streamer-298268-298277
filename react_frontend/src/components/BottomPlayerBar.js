@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { usePlayer } from '../context/PlayerContext';
 import './BottomPlayerBar.css';
 
@@ -55,7 +55,7 @@ function BottomPlayerBar() {
   };
 
   // Handle progress bar mouse move (during drag)
-  const handleProgressMouseMove = (e) => {
+  const handleProgressMouseMove = useCallback((e) => {
     if (!progressBarRef.current) return;
 
     const rect = progressBarRef.current.getBoundingClientRect();
@@ -69,7 +69,7 @@ function BottomPlayerBar() {
     if (isDraggingProgress) {
       setProgress(percent);
     }
-  };
+  }, [isDraggingProgress, metadataLoaded, duration, setProgress]);
 
   // Handle progress bar mouse up (end dragging)
   const handleProgressMouseUp = () => {
@@ -98,13 +98,13 @@ function BottomPlayerBar() {
   };
 
   // Handle volume bar mouse move (during drag)
-  const handleVolumeMouseMove = (e) => {
+  const handleVolumeMouseMove = useCallback((e) => {
     if (isDraggingVolume && volumeBarRef.current) {
       const rect = volumeBarRef.current.getBoundingClientRect();
       const percent = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
       changeVolume(percent);
     }
-  };
+  }, [isDraggingVolume, changeVolume]);
 
   // Handle volume bar mouse up (end dragging)
   const handleVolumeMouseUp = () => {
@@ -140,7 +140,7 @@ function BottomPlayerBar() {
       document.removeEventListener('mousemove', handleGlobalMouseMove);
       document.removeEventListener('mouseup', handleGlobalMouseUp);
     };
-  }, [isDraggingProgress, isDraggingVolume]);
+  }, [isDraggingProgress, isDraggingVolume, handleProgressMouseMove, handleVolumeMouseMove]);
 
   // Touch event handlers for mobile support
   const handleProgressTouchStart = (e) => {
