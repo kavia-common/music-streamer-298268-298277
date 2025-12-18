@@ -1,0 +1,164 @@
+/* Sidebar Component - Spotify Green Theme */
+
+.sidebar {
+  width: 240px;
+  background-color: #000000;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 24px 12px;
+  overflow-y: auto;
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 100;
+}
+
+.sidebar-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 12px;
+  margin-bottom: 32px;
+}
+
+.logo-icon {
+  font-size: 32px;
+}
+
+.logo-text {
+  font-size: 20px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.sidebar-nav {
+  margin-bottom: 24px;
+}
+
+.nav-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.nav-list li {
+  margin-bottom: 8px;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 12px;
+  color: #b3b3b3;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.nav-link:hover {
+  color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.nav-link.active {
+  color: #ffffff;
+  background-color: rgba(29, 185, 84, 0.2);
+}
+
+.nav-icon {
+  font-size: 20px;
+  width: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nav-label {
+  flex: 1;
+}
+
+.sidebar-divider {
+  height: 1px;
+  background-color: rgba(255, 255, 255, 0.1);
+  margin: 8px 0 16px;
+}
+
+.sidebar-playlists {
+  flex: 1;
+  overflow-y: auto;
+  margin-top: 16px;
+}
+
+.playlist-item {
+  padding: 8px 12px;
+  color: #b3b3b3;
+  font-size: 14px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  margin-bottom: 4px;
+}
+
+.playlist-item:hover {
+  color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Scrollbar styling */
+.sidebar::-webkit-scrollbar,
+.sidebar-playlists::-webkit-scrollbar {
+  width: 8px;
+}
+
+.sidebar::-webkit-scrollbar-track,
+.sidebar-playlists::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar::-webkit-scrollbar-thumb,
+.sidebar-playlists::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover,
+.sidebar-playlists::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 200px;
+  }
+}
+
+@media (max-width: 480px) {
+  .sidebar {
+    width: 60px;
+    padding: 24px 8px;
+  }
+
+  .logo-text,
+  .nav-label {
+    display: none;
+  }
+
+  .sidebar-logo {
+    justify-content: center;
+    padding: 0;
+  }
+
+  .nav-link {
+    justify-content: center;
+    padding: 8px;
+  }
+
+  .sidebar-playlists {
+    display: none;
+  }
+}

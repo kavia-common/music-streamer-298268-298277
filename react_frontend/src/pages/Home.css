@@ -1,0 +1,199 @@
+/* Home Dashboard Page - Spotify Green Theme */
+
+.home-layout {
+  display: flex;
+  background-color: #121212;
+  min-height: 100vh;
+  color: #ffffff;
+}
+
+.home-main {
+  flex: 1;
+  margin-left: 240px;
+  margin-bottom: 90px;
+  background: linear-gradient(180deg, #1f1f1f 0%, #121212 300px);
+  min-height: 100vh;
+}
+
+.home-content {
+  padding: 24px 32px 48px;
+}
+
+/* Quick Picks Section */
+.quick-picks-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+  margin-bottom: 48px;
+}
+
+.quick-pick-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background-color: rgba(255, 255, 255, 0.07);
+  border-radius: 4px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  height: 80px;
+}
+
+.quick-pick-card:hover {
+  background-color: rgba(255, 255, 255, 0.12);
+}
+
+.quick-pick-image {
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, #1f1f1f 0%, #2a2a2a 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36px;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.quick-pick-title {
+  flex: 1;
+  font-size: 16px;
+  font-weight: 700;
+  color: #ffffff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding-right: 16px;
+}
+
+.quick-pick-play {
+  position: absolute;
+  right: 16px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background-color: #1DB954;
+  border: none;
+  color: #000000;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  transform: scale(0.9);
+  transition: all 0.3s ease;
+  padding-left: 3px;
+}
+
+.quick-pick-card:hover .quick-pick-play {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.quick-pick-play:hover {
+  background-color: #1ed760;
+  transform: scale(1.05);
+}
+
+/* Responsive design */
+@media (max-width: 1280px) {
+  .quick-picks-grid {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  }
+}
+
+@media (max-width: 1024px) {
+  .home-main {
+    margin-left: 200px;
+  }
+
+  .home-content {
+    padding: 20px 24px 40px;
+  }
+
+  .quick-picks-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+}
+
+@media (max-width: 768px) {
+  .home-main {
+    margin-left: 60px;
+  }
+
+  .home-content {
+    padding: 16px 16px 32px;
+  }
+
+  .quick-picks-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .quick-pick-card {
+    height: 70px;
+  }
+
+  .quick-pick-image {
+    width: 70px;
+    height: 70px;
+    font-size: 28px;
+  }
+
+  .quick-pick-title {
+    font-size: 14px;
+  }
+
+  .quick-pick-play {
+    width: 40px;
+    height: 40px;
+    font-size: 16px;
+    right: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .home-main {
+    margin-left: 60px;
+  }
+
+  .home-content {
+    padding: 12px 12px 24px;
+  }
+
+  .quick-picks-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .quick-pick-card {
+    height: 64px;
+  }
+
+  .quick-pick-image {
+    width: 64px;
+    height: 64px;
+    font-size: 24px;
+  }
+}
+
+/* Scrollbar styling for main content */
+.home-main::-webkit-scrollbar {
+  width: 12px;
+}
+
+.home-main::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.home-main::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+}
+
+.home-main::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}

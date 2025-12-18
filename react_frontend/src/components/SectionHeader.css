@@ -1,0 +1,40 @@
+/* SectionHeader Component - Spotify Green Theme */
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.section-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.section-link {
+  font-size: 14px;
+  font-weight: 700;
+  color: #b3b3b3;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.section-link:hover {
+  color: #ffffff;
+  text-decoration: underline;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .section-title {
+    font-size: 20px;
+  }
+
+  .section-link {
+    font-size: 12px;
+  }
+}
