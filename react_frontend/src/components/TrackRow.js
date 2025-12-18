@@ -16,7 +16,8 @@ function TrackRow({ track, index, onPlay }) {
 
   const handlePlayClick = (e) => {
     e.stopPropagation();
-    if (onPlay) {
+    if (onPlay && track) {
+      // Ensure track has all necessary properties including streamUrl
       onPlay(track);
     }
   };

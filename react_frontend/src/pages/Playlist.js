@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import TopBar from '../components/TopBar';
@@ -95,10 +95,10 @@ function Playlist() {
     };
 
     fetchAudiusTracks();
-  }, [slug]);
+  }, [slug, loadMockedPlaylist]);
 
   // Load mocked playlist data
-  const loadMockedPlaylist = () => {
+  const loadMockedPlaylist = useCallback(() => {
     const playlists = {
       'liked-songs': {
         title: 'Liked Songs',
@@ -109,16 +109,16 @@ function Playlist() {
         totalDuration: '3 hr 25 min',
         coverIcon: '❤️',
         tracks: [
-          { id: 'mock-1', title: 'Blinding Lights', artist: 'The Weeknd', album: 'After Hours', duration: '3:20' },
-          { id: 'mock-2', title: 'Levitating', artist: 'Dua Lipa', album: 'Future Nostalgia', duration: '3:23' },
-          { id: 'mock-3', title: 'Good 4 U', artist: 'Olivia Rodrigo', album: 'SOUR', duration: '2:58' },
-          { id: 'mock-4', title: 'Heat Waves', artist: 'Glass Animals', album: 'Dreamland', duration: '3:59' },
-          { id: 'mock-5', title: 'As It Was', artist: 'Harry Styles', album: "Harry's House", duration: '2:47' },
-          { id: 'mock-6', title: 'Anti-Hero', artist: 'Taylor Swift', album: 'Midnights', duration: '3:20' },
-          { id: 'mock-7', title: 'Flowers', artist: 'Miley Cyrus', album: 'Endless Summer Vacation', duration: '3:20' },
-          { id: 'mock-8', title: 'Shivers', artist: 'Ed Sheeran', album: '=', duration: '3:27' },
-          { id: 'mock-9', title: 'Stay', artist: 'The Kid LAROI & Justin Bieber', album: 'F*ck Love 3', duration: '2:21' },
-          { id: 'mock-10', title: 'Ghost', artist: 'Justin Bieber', album: 'Justice', duration: '2:33' },
+          { id: 'mock-1', title: 'Blinding Lights', artist: 'The Weeknd', album: 'After Hours', duration: '3:20', streamUrl: '' },
+          { id: 'mock-2', title: 'Levitating', artist: 'Dua Lipa', album: 'Future Nostalgia', duration: '3:23', streamUrl: '' },
+          { id: 'mock-3', title: 'Good 4 U', artist: 'Olivia Rodrigo', album: 'SOUR', duration: '2:58', streamUrl: '' },
+          { id: 'mock-4', title: 'Heat Waves', artist: 'Glass Animals', album: 'Dreamland', duration: '3:59', streamUrl: '' },
+          { id: 'mock-5', title: 'As It Was', artist: 'Harry Styles', album: "Harry's House", duration: '2:47', streamUrl: '' },
+          { id: 'mock-6', title: 'Anti-Hero', artist: 'Taylor Swift', album: 'Midnights', duration: '3:20', streamUrl: '' },
+          { id: 'mock-7', title: 'Flowers', artist: 'Miley Cyrus', album: 'Endless Summer Vacation', duration: '3:20', streamUrl: '' },
+          { id: 'mock-8', title: 'Shivers', artist: 'Ed Sheeran', album: '=', duration: '3:27', streamUrl: '' },
+          { id: 'mock-9', title: 'Stay', artist: 'The Kid LAROI & Justin Bieber', album: 'F*ck Love 3', duration: '2:21', streamUrl: '' },
+          { id: 'mock-10', title: 'Ghost', artist: 'Justin Bieber', album: 'Justice', duration: '2:33', streamUrl: '' },
         ],
       },
       'discover-weekly': {
@@ -130,23 +130,23 @@ function Playlist() {
         totalDuration: '2 hr 10 min',
         coverIcon: '🎵',
         tracks: [
-          { id: 'mock-11', title: 'Electric Feel', artist: 'MGMT', album: 'Oracular Spectacular', duration: '3:49' },
-          { id: 'mock-12', title: 'Take Me Out', artist: 'Franz Ferdinand', album: 'Franz Ferdinand', duration: '3:57' },
-          { id: 'mock-13', title: 'Mr. Brightside', artist: 'The Killers', album: 'Hot Fuss', duration: '3:42' },
-          { id: 'mock-14', title: 'Somebody Told Me', artist: 'The Killers', album: 'Hot Fuss', duration: '3:17' },
-          { id: 'mock-15', title: 'Time to Pretend', artist: 'MGMT', album: 'Oracular Spectacular', duration: '4:21' },
-          { id: 'mock-16', title: 'Feel It Still', artist: 'Portugal. The Man', album: 'Woodstock', duration: '2:43' },
-          { id: 'mock-17', title: 'Pumped Up Kicks', artist: 'Foster the People', album: 'Torches', duration: '3:59' },
-          { id: 'mock-18', title: 'Tongue Tied', artist: 'Grouplove', album: 'Never Trust a Happy Song', duration: '3:37' },
-          { id: 'mock-19', title: 'Safe and Sound', artist: 'Capital Cities', album: 'In a Tidal Wave of Mystery', duration: '3:12' },
-          { id: 'mock-20', title: 'Ways to Go', artist: 'Grouplove', album: 'Spreading Rumours', duration: '3:32' },
+          { id: 'mock-11', title: 'Electric Feel', artist: 'MGMT', album: 'Oracular Spectacular', duration: '3:49', streamUrl: '' },
+          { id: 'mock-12', title: 'Take Me Out', artist: 'Franz Ferdinand', album: 'Franz Ferdinand', duration: '3:57', streamUrl: '' },
+          { id: 'mock-13', title: 'Mr. Brightside', artist: 'The Killers', album: 'Hot Fuss', duration: '3:42', streamUrl: '' },
+          { id: 'mock-14', title: 'Somebody Told Me', artist: 'The Killers', album: 'Hot Fuss', duration: '3:17', streamUrl: '' },
+          { id: 'mock-15', title: 'Time to Pretend', artist: 'MGMT', album: 'Oracular Spectacular', duration: '4:21', streamUrl: '' },
+          { id: 'mock-16', title: 'Feel It Still', artist: 'Portugal. The Man', album: 'Woodstock', duration: '2:43', streamUrl: '' },
+          { id: 'mock-17', title: 'Pumped Up Kicks', artist: 'Foster the People', album: 'Torches', duration: '3:59', streamUrl: '' },
+          { id: 'mock-18', title: 'Tongue Tied', artist: 'Grouplove', album: 'Never Trust a Happy Song', duration: '3:37', streamUrl: '' },
+          { id: 'mock-19', title: 'Safe and Sound', artist: 'Capital Cities', album: 'In a Tidal Wave of Mystery', duration: '3:12', streamUrl: '' },
+          { id: 'mock-20', title: 'Ways to Go', artist: 'Grouplove', album: 'Spreading Rumours', duration: '3:32', streamUrl: '' },
         ],
       },
     };
 
     const selectedPlaylist = playlists[slug] || playlists['liked-songs'];
     setPlaylist(selectedPlaylist);
-  };
+  }, [slug]);
 
   // Handle track play
   const handleTrackPlay = (track) => {

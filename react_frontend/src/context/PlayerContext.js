@@ -27,17 +27,19 @@ export const PlayerProvider = ({ children }) => {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(0.7);
+  const [metadataLoaded, setMetadataLoaded] = useState(false);
   const audioRef = useRef(null);
 
   // Initialize audio element
   useEffect(() => {
     if (!audioRef.current) {
       audioRef.current = new Audio();
-      audioRef.current.volume = volume;
+      audioRef.current.volume = 0.7;
 
       // Set up event listeners
       audioRef.current.addEventListener('timeupdate', handleTimeUpdate);
       audioRef.current.addEventListener('loadedmetadata', handleLoadedMetadata);
+      audioRef.current.addEventListener('durationchange', handleDurationChange);
       audioRef.current.addEventListener('ended', handleEnded);
       audioRef.current.addEventListener('error', handleError);
     }
@@ -46,10 +48,12 @@ export const PlayerProvider = ({ children }) => {
       if (audioRef.current) {
         audioRef.current.removeEventListener('timeupdate', handleTimeUpdate);
         audioRef.current.removeEventListener('loadedmetadata', handleLoadedMetadata);
+        audioRef.current.removeEventListener('durationchange', handleDurationChange);
         audioRef.current.removeEventListener('ended', handleEnded);
         audioRef.current.removeEventListener('error', handleError);
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Handle time update
@@ -63,6 +67,15 @@ export const PlayerProvider = ({ children }) => {
   const handleLoadedMetadata = () => {
     if (audioRef.current) {
       setDuration(audioRef.current.duration);
+      setMetadataLoaded(true);
+    }
+  };
+
+  // Handle duration change
+  const handleDurationChange = () => {
+    if (audioRef.current && !isNaN(audioRef.current.duration)) {
+      setDuration(audioRef.current.duration);
+      setMetadataLoaded(true);
     }
   };
 
@@ -76,6 +89,39 @@ export const PlayerProvider = ({ children }) => {
   const handleError = (e) => {
     console.error('Audio playback error:', e);
     setIsPlaying(false);
+  };
+
+  /**
+   * Format time from seconds to MM:SS or H:MM:SS
+   * @param {number} seconds - Time in seconds
+   * @returns {string} Formatted time string
+   */
+  const formatTime = (seconds) => {
+    if (!seconds || isNaN(seconds)) return '0:00';
+    const hours = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    const secs = Math.floor(seconds % 60);
+    
+    if (hours > 0) {
+      return `${hours}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  /**
+   * Get formatted current time string
+   * @returns {string} Formatted current time
+   */
+  const getFormattedCurrentTime = () => {
+    return formatTime(currentTime);
+  };
+
+  /**
+   * Get formatted duration string
+   * @returns {string} Formatted duration
+   */
+  const getFormattedDuration = () => {
+    return formatTime(duration);
   };
 
   /**
@@ -94,6 +140,11 @@ export const PlayerProvider = ({ children }) => {
         togglePlayPause();
         return;
       }
+
+      // Reset metadata state for new track
+      setMetadataLoaded(false);
+      setDuration(0);
+      setCurrentTime(0);
 
       // Set new track
       setCurrentTrack(track);
@@ -145,14 +196,33 @@ export const PlayerProvider = ({ children }) => {
   };
 
   /**
-   * Seek to a specific time
+   * Seek to a specific time in seconds
    * @param {number} time - Time in seconds
    */
   const seekTo = (time) => {
-    if (audioRef.current) {
-      audioRef.current.currentTime = time;
-      setCurrentTime(time);
+    if (!audioRef.current || !metadataLoaded || isNaN(duration) || duration === 0) {
+      return;
     }
+    
+    // Clamp time to valid range
+    const clampedTime = Math.max(0, Math.min(time, duration));
+    audioRef.current.currentTime = clampedTime;
+    setCurrentTime(clampedTime);
+  };
+
+  /**
+   * Seek to a specific position by percentage
+   * @param {number} percent - Position as percentage (0-1)
+   */
+  const setProgress = (percent) => {
+    if (!audioRef.current || !metadataLoaded || isNaN(duration) || duration === 0) {
+      return;
+    }
+    
+    // Clamp percent to valid range
+    const clampedPercent = Math.max(0, Math.min(1, percent));
+    const newTime = clampedPercent * duration;
+    seekTo(newTime);
   };
 
   /**
@@ -185,11 +255,16 @@ export const PlayerProvider = ({ children }) => {
     currentTime,
     duration,
     volume,
+    metadataLoaded,
     playTrack,
     togglePlayPause,
     seekTo,
+    setProgress,
     changeVolume,
     stop,
+    formatTime,
+    getFormattedCurrentTime,
+    getFormattedDuration,
   };
 
   return <PlayerContext.Provider value={value}>{children}</PlayerContext.Provider>;

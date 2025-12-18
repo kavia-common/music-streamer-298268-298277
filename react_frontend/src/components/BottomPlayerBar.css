@@ -146,9 +146,14 @@
   border-radius: 2px;
   position: relative;
   cursor: pointer;
+  transition: opacity 0.2s ease;
 }
 
 .progress-bar:hover .progress-fill {
+  background-color: #1DB954;
+}
+
+.progress-bar:active .progress-fill {
   background-color: #1DB954;
 }
 
@@ -158,6 +163,7 @@
   border-radius: 2px;
   position: relative;
   transition: background-color 0.2s ease;
+  pointer-events: none;
 }
 
 .progress-handle {
@@ -171,10 +177,24 @@
   border-radius: 50%;
   opacity: 0;
   transition: opacity 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  pointer-events: none;
 }
 
 .progress-bar:hover .progress-handle {
   opacity: 1;
+}
+
+.progress-bar[aria-disabled="true"] {
+  cursor: default;
+}
+
+.progress-bar[aria-disabled="true"]:hover .progress-fill {
+  background-color: #ffffff;
+}
+
+.progress-bar[aria-disabled="true"]:hover .progress-handle {
+  opacity: 0;
 }
 
 /* Volume Section */
