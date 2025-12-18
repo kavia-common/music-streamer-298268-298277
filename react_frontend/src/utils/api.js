@@ -21,7 +21,11 @@ export const register = async (userData) => {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(userData),
+      body: JSON.stringify({
+        email: userData.email,
+        password: userData.password,
+        display_name: userData.displayName,
+      }),
     });
 
     const data = await response.json();
@@ -30,7 +34,14 @@ export const register = async (userData) => {
       throw new Error(data.message || 'Registration failed');
     }
 
-    return data;
+    // Return normalized response with token and user data
+    return {
+      token: data.data?.session?.access_token,
+      refreshToken: data.data?.session?.refresh_token,
+      expiresAt: data.data?.session?.expires_at,
+      user: data.data?.user,
+      profile: data.data?.profile,
+    };
   } catch (error) {
     throw new Error(error.message || 'Network error during registration');
   }
@@ -60,9 +71,87 @@ export const login = async (credentials) => {
       throw new Error(data.message || 'Login failed');
     }
 
-    return data;
+    // Return normalized response with token and user data
+    return {
+      token: data.data?.session?.access_token,
+      refreshToken: data.data?.session?.refresh_token,
+      expiresAt: data.data?.session?.expires_at,
+      user: data.data?.user,
+    };
   } catch (error) {
     throw new Error(error.message || 'Network error during login');
+  }
+};
+
+/**
+ * PUBLIC_INTERFACE
+ * Logout the current user
+ * @returns {Promise<void>}
+ */
+export const logout = async () => {
+  try {
+    const token = getAuthToken();
+    if (!token) {
+      return;
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/auth/logout`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Logout failed');
+    }
+
+    // Clear local storage
+    removeAuthToken();
+    removeUserData();
+  } catch (error) {
+    // Even if logout fails on server, clear local data
+    removeAuthToken();
+    removeUserData();
+    throw new Error(error.message || 'Network error during logout');
+  }
+};
+
+/**
+ * PUBLIC_INTERFACE
+ * Get current authenticated user information
+ * @returns {Promise<Object>} User data and profile
+ */
+export const getCurrentUser = async () => {
+  try {
+    const token = getAuthToken();
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/auth/me`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to get user information');
+    }
+
+    return {
+      user: data.data?.user,
+      profile: data.data?.profile,
+    };
+  } catch (error) {
+    throw new Error(error.message || 'Network error fetching user data');
   }
 };
 
@@ -92,4 +181,43 @@ export const getAuthToken = () => {
  */
 export const removeAuthToken = () => {
   localStorage.removeItem('authToken');
+};
+
+/**
+ * PUBLIC_INTERFACE
+ * Store user data in localStorage
+ * @param {Object} userData - User data object
+ */
+export const setUserData = (userData) => {
+  if (userData) {
+    localStorage.setItem('userData', JSON.stringify(userData));
+  }
+};
+
+/**
+ * PUBLIC_INTERFACE
+ * Retrieve user data from localStorage
+ * @returns {Object|null} User data object or null
+ */
+export const getUserData = () => {
+  const data = localStorage.getItem('userData');
+  return data ? JSON.parse(data) : null;
+};
+
+/**
+ * PUBLIC_INTERFACE
+ * Remove user data from localStorage
+ */
+export const removeUserData = () => {
+  localStorage.removeItem('userData');
+};
+
+/**
+ * PUBLIC_INTERFACE
+ * Check if user is authenticated
+ * @returns {boolean} True if user has valid token
+ */
+export const isAuthenticated = () => {
+  const token = getAuthToken();
+  return !!token;
 };

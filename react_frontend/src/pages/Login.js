@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AuthForm from '../components/AuthForm';
-import { login, setAuthToken } from '../utils/api';
+import { login, setAuthToken, setUserData } from '../utils/api';
 
 /**
  * PUBLIC_INTERFACE
@@ -27,6 +27,14 @@ function Login() {
       // Store the authentication token
       if (response.token) {
         setAuthToken(response.token);
+      }
+
+      // Store user data
+      if (response.user) {
+        setUserData({
+          ...response.user,
+          profile: response.profile,
+        });
       }
 
       // Navigate to home page on successful login
