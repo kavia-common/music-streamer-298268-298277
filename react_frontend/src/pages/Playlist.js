@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import TopBar from '../components/TopBar';
@@ -8,6 +8,17 @@ import BottomPlayerBar from '../components/BottomPlayerBar';
 import { useAuth } from '../context/AuthContext';
 import { usePlayer } from '../context/PlayerContext';
 import './Playlist.css';
+
+/**
+ * Format duration from seconds to MM:SS
+ * Moved outside component to prevent recreation on every render
+ */
+const formatDuration = (seconds) => {
+  if (!seconds || isNaN(seconds)) return '0:00';
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
+};
 
 /**
  * PUBLIC_INTERFACE
@@ -23,14 +34,7 @@ function Playlist() {
   const [playlist, setPlaylist] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-
-  // Format duration from seconds to MM:SS
-  const formatDuration = (seconds) => {
-    if (!seconds || isNaN(seconds)) return '0:00';
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
+  const isMountedRef = useRef(true);
 
   // Load mocked playlist data
   const loadMockedPlaylist = useCallback(() => {
@@ -80,11 +84,19 @@ function Playlist() {
     };
 
     const selectedPlaylist = playlists[slug] || playlists['liked-songs'];
-    setPlaylist(selectedPlaylist);
+    if (isMountedRef.current) {
+      setPlaylist(selectedPlaylist);
+    }
   }, [slug]);
 
   // Fetch Audius trending tracks for discover-weekly
   useEffect(() => {
+    // Reset mounted flag on mount
+    isMountedRef.current = true;
+
+    // Create abort controller for this effect run
+    const abortController = new AbortController();
+
     const fetchAudiusTracks = async () => {
       if (slug !== 'discover-weekly') {
         // Load mocked data for other playlists
@@ -92,11 +104,15 @@ function Playlist() {
         return;
       }
 
+      if (!isMountedRef.current) return;
+
       setLoading(true);
       setError(null);
 
       try {
-        const response = await fetch('https://discoveryprovider.audius.co/v1/tracks/trending?limit=20');
+        const response = await fetch('https://discoveryprovider.audius.co/v1/tracks/trending?limit=20', {
+          signal: abortController.signal,
+        });
         
         if (!response.ok) {
           throw new Error(`Failed to fetch tracks: ${response.statusText}`);
@@ -125,28 +141,48 @@ function Playlist() {
         const minutes = Math.floor((totalDuration % 3600) / 60);
         const durationStr = hours > 0 ? `${hours} hr ${minutes} min` : `${minutes} min`;
 
-        setPlaylist({
-          title: 'Discover Weekly',
-          description: 'Your weekly mixtape of fresh music. Enjoy new music and deep cuts picked for you. Updates every Monday.',
-          owner: 'Audius',
-          likeCount: 12543,
-          trackCount: tracks.length,
-          totalDuration: durationStr,
-          coverIcon: '🎵',
-          tracks: tracks,
-        });
+        // Only update state if component is still mounted
+        if (isMountedRef.current) {
+          setPlaylist({
+            title: 'Discover Weekly',
+            description: 'Your weekly mixtape of fresh music. Enjoy new music and deep cuts picked for you. Updates every Monday.',
+            owner: 'Audius',
+            likeCount: 12543,
+            trackCount: tracks.length,
+            totalDuration: durationStr,
+            coverIcon: '🎵',
+            tracks: tracks,
+          });
+        }
       } catch (err) {
+        // Ignore abort errors
+        if (err.name === 'AbortError') {
+          return;
+        }
+
         console.error('Error fetching Audius tracks:', err);
-        setError(err.message || 'Failed to load tracks from Audius');
-        // Fallback to mocked data on error
-        loadMockedPlaylist();
+        
+        // Only update state if component is still mounted
+        if (isMountedRef.current) {
+          setError(err.message || 'Failed to load tracks from Audius');
+          // Fallback to mocked data on error
+          loadMockedPlaylist();
+        }
       } finally {
-        setLoading(false);
+        if (isMountedRef.current) {
+          setLoading(false);
+        }
       }
     };
 
     fetchAudiusTracks();
-  }, [slug, loadMockedPlaylist, formatDuration]);
+
+    // Cleanup function: abort fetch and mark as unmounted
+    return () => {
+      isMountedRef.current = false;
+      abortController.abort();
+    };
+  }, [slug, loadMockedPlaylist]); // Removed formatDuration from dependencies
 
   // Handle track play
   const handleTrackPlay = (track) => {
