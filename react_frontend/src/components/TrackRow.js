@@ -9,19 +9,28 @@ import './TrackRow.css';
  * @param {Object} props - Component props
  * @param {Object} props.track - Track data object
  * @param {number} props.index - Track index in playlist
+ * @param {Function} props.onPlay - Optional callback when track is played
  */
-function TrackRow({ track, index }) {
+function TrackRow({ track, index, onPlay }) {
   const [isHovered, setIsHovered] = useState(false);
+
+  const handlePlayClick = (e) => {
+    e.stopPropagation();
+    if (onPlay) {
+      onPlay(track);
+    }
+  };
 
   return (
     <div 
       className="track-row"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      onClick={handlePlayClick}
     >
       <div className="track-number">
         {isHovered ? (
-          <button className="track-play-button" aria-label={`Play ${track.title}`}>
+          <button className="track-play-button" aria-label={`Play ${track.title}`} onClick={handlePlayClick}>
             ▶
           </button>
         ) : (
@@ -37,11 +46,11 @@ function TrackRow({ track, index }) {
       <div className="track-album">{track.album}</div>
 
       <div className="track-actions">
-        <button className="track-like-button" aria-label="Like song">
+        <button className="track-like-button" aria-label="Like song" onClick={(e) => e.stopPropagation()}>
           ♡
         </button>
         <span className="track-duration">{track.duration}</span>
-        <button className="track-menu-button" aria-label="More options">
+        <button className="track-menu-button" aria-label="More options" onClick={(e) => e.stopPropagation()}>
           ⋯
         </button>
       </div>

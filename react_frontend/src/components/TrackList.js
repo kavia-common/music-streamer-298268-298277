@@ -9,8 +9,9 @@ import './TrackList.css';
  * 
  * @param {Object} props - Component props
  * @param {Array} props.tracks - Array of track objects
+ * @param {Function} props.onPlay - Optional callback when a track is played
  */
-function TrackList({ tracks }) {
+function TrackList({ tracks, onPlay }) {
   return (
     <div className="track-list-container">
       <div className="playlist-actions">
@@ -37,7 +38,7 @@ function TrackList({ tracks }) {
 
       <div className="track-list">
         {tracks.map((track, index) => (
-          <TrackRow key={index} track={track} index={index} />
+          <TrackRow key={track.id || index} track={track} index={index} onPlay={onPlay} />
         ))}
       </div>
     </div>
