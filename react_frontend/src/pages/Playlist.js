@@ -7,6 +7,7 @@ import TrackList from '../components/TrackList';
 import BottomPlayerBar from '../components/BottomPlayerBar';
 import { useAuth } from '../context/AuthContext';
 import { usePlayer } from '../context/PlayerContext';
+import { getPlaylistById } from '../utils/api';
 import './Playlist.css';
 
 /**
@@ -25,7 +26,9 @@ const formatDuration = (seconds) => {
  * Playlist page component displaying a Spotify-like playlist layout.
  * Shows cover art, metadata, action buttons, and track list.
  * For 'discover-weekly', fetches live data from Audius API.
- * For other playlists, uses mocked data.
+ * For numeric IDs, fetches from backend API.
+ * For other slugs, uses mocked data.
+ * Includes lightweight edit UI for playlist name and description (no save yet).
  */
 function Playlist() {
   const { slug } = useParams();
@@ -34,7 +37,13 @@ function Playlist() {
   const [playlist, setPlaylist] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [editDescription, setEditDescription] = useState('');
   const isMountedRef = useRef(true);
+
+  // Check if slug is a numeric ID (backend playlist)
+  const isBackendPlaylist = /^\d+$/.test(slug);
 
   // Load mocked playlist data
   const loadMockedPlaylist = useCallback(() => {
@@ -86,107 +95,179 @@ function Playlist() {
     const selectedPlaylist = playlists[slug] || playlists['liked-songs'];
     if (isMountedRef.current) {
       setPlaylist(selectedPlaylist);
+      setEditName(selectedPlaylist.title);
+      setEditDescription(selectedPlaylist.description);
     }
   }, [slug]);
 
-  // Fetch Audius trending tracks for discover-weekly
-  useEffect(() => {
-    // Reset mounted flag on mount
-    isMountedRef.current = true;
+  // Fetch backend playlist
+  const fetchBackendPlaylist = useCallback(async () => {
+    if (!isAuthenticated) {
+      setError('Please log in to view this playlist');
+      return;
+    }
 
-    // Create abort controller for this effect run
+    setLoading(true);
+    setError(null);
+
+    try {
+      const data = await getPlaylistById(slug);
+      
+      // Transform backend data to match our component format
+      const transformedPlaylist = {
+        id: data.id,
+        title: data.name || 'Untitled Playlist',
+        description: data.description || 'No description',
+        owner: user?.email || 'You',
+        likeCount: 0,
+        trackCount: data.tracks?.length || 0,
+        totalDuration: '0 min',
+        coverIcon: '🎵',
+        tracks: data.tracks || [],
+      };
+
+      if (isMountedRef.current) {
+        setPlaylist(transformedPlaylist);
+        setEditName(transformedPlaylist.title);
+        setEditDescription(transformedPlaylist.description);
+      }
+    } catch (err) {
+      console.error('Error fetching backend playlist:', err);
+      if (isMountedRef.current) {
+        setError(err.message);
+      }
+    } finally {
+      if (isMountedRef.current) {
+        setLoading(false);
+      }
+    }
+  }, [slug, isAuthenticated, user]);
+
+  // Fetch Audius trending tracks for discover-weekly
+  const fetchAudiusTracks = useCallback(async () => {
+    if (!isMountedRef.current) return;
+
+    setLoading(true);
+    setError(null);
+
     const abortController = new AbortController();
 
-    const fetchAudiusTracks = async () => {
-      if (slug !== 'discover-weekly') {
-        // Load mocked data for other playlists
-        loadMockedPlaylist();
+    try {
+      const response = await fetch('https://discoveryprovider.audius.co/v1/tracks/trending?limit=20', {
+        signal: abortController.signal,
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch tracks: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+
+      if (!data.data || !Array.isArray(data.data)) {
+        throw new Error('Invalid response format from Audius API');
+      }
+
+      const appName = process.env.REACT_APP_AUDIUS_APP_NAME || 'music-streamer';
+
+      // Transform Audius tracks to our format
+      const tracks = data.data.map((track) => ({
+        id: track.id,
+        title: track.title || 'Unknown Title',
+        artist: track.user?.name || 'Unknown Artist',
+        album: track.mood || 'Single',
+        duration: formatDuration(track.duration),
+        streamUrl: `https://discoveryprovider.audius.co/v1/tracks/${track.id}/stream?app_name=${appName}`,
+      }));
+
+      const totalDuration = data.data.reduce((acc, track) => acc + (track.duration || 0), 0);
+      const hours = Math.floor(totalDuration / 3600);
+      const minutes = Math.floor((totalDuration % 3600) / 60);
+      const durationStr = hours > 0 ? `${hours} hr ${minutes} min` : `${minutes} min`;
+
+      if (isMountedRef.current) {
+        const audiusPlaylist = {
+          title: 'Discover Weekly',
+          description: 'Your weekly mixtape of fresh music. Enjoy new music and deep cuts picked for you. Updates every Monday.',
+          owner: 'Audius',
+          likeCount: 12543,
+          trackCount: tracks.length,
+          totalDuration: durationStr,
+          coverIcon: '🎵',
+          tracks: tracks,
+        };
+        setPlaylist(audiusPlaylist);
+        setEditName(audiusPlaylist.title);
+        setEditDescription(audiusPlaylist.description);
+      }
+    } catch (err) {
+      if (err.name === 'AbortError') {
         return;
       }
 
-      if (!isMountedRef.current) return;
-
-      setLoading(true);
-      setError(null);
-
-      try {
-        const response = await fetch('https://discoveryprovider.audius.co/v1/tracks/trending?limit=20', {
-          signal: abortController.signal,
-        });
-        
-        if (!response.ok) {
-          throw new Error(`Failed to fetch tracks: ${response.statusText}`);
-        }
-
-        const data = await response.json();
-
-        if (!data.data || !Array.isArray(data.data)) {
-          throw new Error('Invalid response format from Audius API');
-        }
-
-        const appName = process.env.REACT_APP_AUDIUS_APP_NAME || 'music-streamer';
-
-        // Transform Audius tracks to our format
-        const tracks = data.data.map((track) => ({
-          id: track.id,
-          title: track.title || 'Unknown Title',
-          artist: track.user?.name || 'Unknown Artist',
-          album: track.mood || 'Single',
-          duration: formatDuration(track.duration),
-          streamUrl: `https://discoveryprovider.audius.co/v1/tracks/${track.id}/stream?app_name=${appName}`,
-        }));
-
-        const totalDuration = data.data.reduce((acc, track) => acc + (track.duration || 0), 0);
-        const hours = Math.floor(totalDuration / 3600);
-        const minutes = Math.floor((totalDuration % 3600) / 60);
-        const durationStr = hours > 0 ? `${hours} hr ${minutes} min` : `${minutes} min`;
-
-        // Only update state if component is still mounted
-        if (isMountedRef.current) {
-          setPlaylist({
-            title: 'Discover Weekly',
-            description: 'Your weekly mixtape of fresh music. Enjoy new music and deep cuts picked for you. Updates every Monday.',
-            owner: 'Audius',
-            likeCount: 12543,
-            trackCount: tracks.length,
-            totalDuration: durationStr,
-            coverIcon: '🎵',
-            tracks: tracks,
-          });
-        }
-      } catch (err) {
-        // Ignore abort errors
-        if (err.name === 'AbortError') {
-          return;
-        }
-
-        console.error('Error fetching Audius tracks:', err);
-        
-        // Only update state if component is still mounted
-        if (isMountedRef.current) {
-          setError(err.message || 'Failed to load tracks from Audius');
-          // Fallback to mocked data on error
-          loadMockedPlaylist();
-        }
-      } finally {
-        if (isMountedRef.current) {
-          setLoading(false);
-        }
+      console.error('Error fetching Audius tracks:', err);
+      
+      if (isMountedRef.current) {
+        setError(err.message || 'Failed to load tracks from Audius');
+        loadMockedPlaylist();
       }
-    };
+    } finally {
+      if (isMountedRef.current) {
+        setLoading(false);
+      }
+    }
 
-    fetchAudiusTracks();
-
-    // Cleanup function: abort fetch and mark as unmounted
     return () => {
-      isMountedRef.current = false;
       abortController.abort();
     };
-  }, [slug, loadMockedPlaylist]); // Removed formatDuration from dependencies
+  }, [loadMockedPlaylist]);
+
+  // Main effect to load playlist data
+  useEffect(() => {
+    isMountedRef.current = true;
+
+    if (isBackendPlaylist) {
+      // Fetch from backend
+      fetchBackendPlaylist();
+    } else if (slug === 'discover-weekly') {
+      // Fetch from Audius
+      fetchAudiusTracks();
+    } else {
+      // Load mocked data
+      loadMockedPlaylist();
+    }
+
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, [slug, isBackendPlaylist, fetchBackendPlaylist, fetchAudiusTracks, loadMockedPlaylist]);
 
   // Handle track play
   const handleTrackPlay = (track) => {
     playTrack(track);
+  };
+
+  // Handle edit mode toggle
+  const handleEditToggle = () => {
+    if (isEditing) {
+      // Apply local changes (no save to backend yet)
+      setPlaylist((prev) => ({
+        ...prev,
+        title: editName,
+        description: editDescription,
+      }));
+    } else {
+      // Enter edit mode
+      setEditName(playlist.title);
+      setEditDescription(playlist.description);
+    }
+    setIsEditing(!isEditing);
+  };
+
+  // Handle cancel edit
+  const handleCancelEdit = () => {
+    setEditName(playlist.title);
+    setEditDescription(playlist.description);
+    setIsEditing(false);
   };
 
   if (loading) {
@@ -204,25 +285,16 @@ function Playlist() {
     );
   }
 
-  if (error && slug === 'discover-weekly') {
+  if (error && !playlist) {
     return (
       <div className="playlist-layout">
         <Sidebar />
         <main className="playlist-main">
           <TopBar user={isAuthenticated ? user : null} />
           <div style={{ padding: '48px 32px', textAlign: 'center', color: '#ef4444' }}>
-            <div style={{ fontSize: '24px', marginBottom: '16px' }}>⚠️ Error Loading Tracks</div>
+            <div style={{ fontSize: '24px', marginBottom: '16px' }}>⚠️ Error Loading Playlist</div>
             <div style={{ fontSize: '16px', color: '#b3b3b3' }}>{error}</div>
-            <div style={{ fontSize: '14px', color: '#b3b3b3', marginTop: '8px' }}>
-              Showing fallback data instead.
-            </div>
           </div>
-          {playlist && (
-            <div className="playlist-content">
-              <PlaylistHeader playlist={playlist} />
-              <TrackList tracks={playlist.tracks} onPlay={handleTrackPlay} />
-            </div>
-          )}
         </main>
         <BottomPlayerBar />
       </div>
@@ -252,7 +324,140 @@ function Playlist() {
         <TopBar user={isAuthenticated ? user : null} />
         
         <div className="playlist-content">
-          <PlaylistHeader playlist={playlist} />
+          {isEditing ? (
+            <div style={{
+              padding: '24px 32px',
+              background: 'linear-gradient(180deg, rgba(29, 185, 84, 0.4) 0%, rgba(18, 18, 18, 0) 100%)',
+              minHeight: '340px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '16px',
+            }}>
+              <div style={{ fontSize: '12px', fontWeight: '700', color: '#ffffff', textTransform: 'uppercase' }}>
+                EDITING PLAYLIST
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxWidth: '600px' }}>
+                <div>
+                  <label htmlFor="playlist-name" style={{ display: 'block', marginBottom: '8px', color: '#b3b3b3', fontSize: '14px' }}>
+                    Playlist Name
+                  </label>
+                  <input
+                    id="playlist-name"
+                    type="text"
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '12px',
+                      fontSize: '16px',
+                      backgroundColor: '#282828',
+                      border: '1px solid #404040',
+                      borderRadius: '4px',
+                      color: '#ffffff',
+                      outline: 'none',
+                    }}
+                    placeholder="Enter playlist name"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="playlist-description" style={{ display: 'block', marginBottom: '8px', color: '#b3b3b3', fontSize: '14px' }}>
+                    Description
+                  </label>
+                  <textarea
+                    id="playlist-description"
+                    value={editDescription}
+                    onChange={(e) => setEditDescription(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '12px',
+                      fontSize: '14px',
+                      backgroundColor: '#282828',
+                      border: '1px solid #404040',
+                      borderRadius: '4px',
+                      color: '#ffffff',
+                      outline: 'none',
+                      resize: 'vertical',
+                      minHeight: '80px',
+                    }}
+                    placeholder="Add an optional description"
+                  />
+                </div>
+                <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
+                  <button
+                    onClick={handleEditToggle}
+                    style={{
+                      padding: '10px 24px',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      backgroundColor: '#1DB954',
+                      color: '#000000',
+                      border: 'none',
+                      borderRadius: '500px',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                    }}
+                    onMouseOver={(e) => e.target.style.transform = 'scale(1.05)'}
+                    onMouseOut={(e) => e.target.style.transform = 'scale(1)'}
+                  >
+                    Apply Changes
+                  </button>
+                  <button
+                    onClick={handleCancelEdit}
+                    style={{
+                      padding: '10px 24px',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      backgroundColor: 'transparent',
+                      color: '#ffffff',
+                      border: '1px solid #ffffff',
+                      borderRadius: '500px',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                    }}
+                    onMouseOver={(e) => e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.1)'}
+                    onMouseOut={(e) => e.target.style.backgroundColor = 'transparent'}
+                  >
+                    Cancel
+                  </button>
+                </div>
+                <div style={{ fontSize: '12px', color: '#b3b3b3', marginTop: '8px' }}>
+                  Note: Changes are local only. Save functionality will be added later.
+                </div>
+              </div>
+            </div>
+          ) : (
+            <>
+              <PlaylistHeader playlist={playlist} />
+              {isBackendPlaylist && (
+                <div style={{ padding: '16px 32px' }}>
+                  <button
+                    onClick={handleEditToggle}
+                    style={{
+                      padding: '8px 20px',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      backgroundColor: 'transparent',
+                      color: '#b3b3b3',
+                      border: '1px solid #b3b3b3',
+                      borderRadius: '500px',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                    }}
+                    onMouseOver={(e) => {
+                      e.target.style.color = '#ffffff';
+                      e.target.style.borderColor = '#ffffff';
+                    }}
+                    onMouseOut={(e) => {
+                      e.target.style.color = '#b3b3b3';
+                      e.target.style.borderColor = '#b3b3b3';
+                    }}
+                  >
+                    ✏️ Edit Details
+                  </button>
+                </div>
+              )}
+            </>
+          )}
           <TrackList tracks={playlist.tracks} onPlay={handleTrackPlay} />
         </div>
       </main>

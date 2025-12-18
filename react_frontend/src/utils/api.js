@@ -157,6 +157,144 @@ export const getCurrentUser = async () => {
 
 /**
  * PUBLIC_INTERFACE
+ * Create a new playlist
+ * @param {Object} playlistData - Playlist creation data
+ * @param {string} playlistData.name - Playlist name
+ * @param {string} playlistData.description - Playlist description (optional)
+ * @returns {Promise<Object>} Created playlist data
+ */
+export const createPlaylist = async (playlistData) => {
+  try {
+    const token = getAuthToken();
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/playlists`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(playlistData),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to create playlist');
+    }
+
+    return data.data || data;
+  } catch (error) {
+    throw new Error(error.message || 'Network error creating playlist');
+  }
+};
+
+/**
+ * PUBLIC_INTERFACE
+ * Get all playlists for the current user
+ * @returns {Promise<Array>} Array of playlist objects
+ */
+export const getPlaylists = async () => {
+  try {
+    const token = getAuthToken();
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/playlists`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to fetch playlists');
+    }
+
+    return data.data || data;
+  } catch (error) {
+    throw new Error(error.message || 'Network error fetching playlists');
+  }
+};
+
+/**
+ * PUBLIC_INTERFACE
+ * Get a specific playlist by ID
+ * @param {string} playlistId - Playlist ID
+ * @returns {Promise<Object>} Playlist data
+ */
+export const getPlaylistById = async (playlistId) => {
+  try {
+    const token = getAuthToken();
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/playlists/${playlistId}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to fetch playlist');
+    }
+
+    return data.data || data;
+  } catch (error) {
+    throw new Error(error.message || 'Network error fetching playlist');
+  }
+};
+
+/**
+ * PUBLIC_INTERFACE
+ * Update a playlist
+ * @param {string} playlistId - Playlist ID
+ * @param {Object} updateData - Data to update
+ * @param {string} updateData.name - New playlist name (optional)
+ * @param {string} updateData.description - New playlist description (optional)
+ * @returns {Promise<Object>} Updated playlist data
+ */
+export const updatePlaylist = async (playlistId, updateData) => {
+  try {
+    const token = getAuthToken();
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/playlists/${playlistId}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(updateData),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to update playlist');
+    }
+
+    return data.data || data;
+  } catch (error) {
+    throw new Error(error.message || 'Network error updating playlist');
+  }
+};
+
+/**
+ * PUBLIC_INTERFACE
  * Store authentication token in localStorage
  * @param {string} token - JWT authentication token
  */
