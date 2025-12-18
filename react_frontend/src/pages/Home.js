@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import TopBar from '../components/TopBar';
 import SectionHeader from '../components/SectionHeader';
@@ -14,24 +15,30 @@ import './Home.css';
  */
 function Home() {
   const { user, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+
+  // Handle playlist navigation
+  const handlePlaylistClick = (slug) => {
+    navigate(`/playlist/${slug}`);
+  };
 
   // Mocked data for "Good afternoon" section
   const recentlyPlayed = [
-    { title: 'Liked Songs', description: '50 songs', icon: '❤️' },
-    { title: 'Chill Vibes', description: 'Playlist', icon: '🎧' },
-    { title: 'Workout Mix', description: 'Playlist', icon: '💪' },
-    { title: 'Road Trip', description: 'Playlist', icon: '🚗' },
-    { title: 'Focus Flow', description: 'Playlist', icon: '🎯' },
-    { title: 'Party Hits', description: 'Playlist', icon: '🎉' },
+    { title: 'Liked Songs', description: '50 songs', icon: '❤️', slug: 'liked-songs' },
+    { title: 'Chill Vibes', description: 'Playlist', icon: '🎧', slug: 'chill-vibes' },
+    { title: 'Workout Mix', description: 'Playlist', icon: '💪', slug: 'workout-mix' },
+    { title: 'Road Trip', description: 'Playlist', icon: '🚗', slug: 'road-trip' },
+    { title: 'Focus Flow', description: 'Playlist', icon: '🎯', slug: 'focus-flow' },
+    { title: 'Party Hits', description: 'Playlist', icon: '🎉', slug: 'party-hits' },
   ];
 
   // Mocked data for "Made for you" section
   const madeForYou = [
-    { title: 'Discover Weekly', description: 'Your weekly mixtape of fresh music', icon: '🎵' },
-    { title: 'Release Radar', description: 'New releases from artists you follow', icon: '📡' },
-    { title: 'Daily Mix 1', description: 'The Weeknd, Drake, and more', icon: '🎼' },
-    { title: 'Daily Mix 2', description: 'Pop hits and feel-good tracks', icon: '🎤' },
-    { title: 'On Repeat', description: 'Songs you can\'t stop playing', icon: '🔁' },
+    { title: 'Discover Weekly', description: 'Your weekly mixtape of fresh music', icon: '🎵', slug: 'discover-weekly' },
+    { title: 'Release Radar', description: 'New releases from artists you follow', icon: '📡', slug: 'release-radar' },
+    { title: 'Daily Mix 1', description: 'The Weeknd, Drake, and more', icon: '🎼', slug: 'daily-mix-1' },
+    { title: 'Daily Mix 2', description: 'Pop hits and feel-good tracks', icon: '🎤', slug: 'daily-mix-2' },
+    { title: 'On Repeat', description: 'Songs you can\'t stop playing', icon: '🔁', slug: 'on-repeat' },
   ];
 
   // Mocked data for "Recently played" section
@@ -71,10 +78,21 @@ function Home() {
           <SectionHeader title={getGreeting()} />
           <div className="quick-picks-grid">
             {recentlyPlayed.map((item, index) => (
-              <div key={index} className="quick-pick-card">
+              <div 
+                key={index} 
+                className="quick-pick-card"
+                onClick={() => handlePlaylistClick(item.slug)}
+              >
                 <div className="quick-pick-image">{item.icon}</div>
                 <span className="quick-pick-title">{item.title}</span>
-                <button className="quick-pick-play" aria-label={`Play ${item.title}`}>
+                <button 
+                  className="quick-pick-play" 
+                  aria-label={`Play ${item.title}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    // Handle play action separately if needed
+                  }}
+                >
                   ▶
                 </button>
               </div>
@@ -82,7 +100,7 @@ function Home() {
           </div>
 
           <SectionHeader title="Made for you" link="/section/made-for-you" />
-          <CardGrid items={madeForYou} type="playlist" />
+          <CardGrid items={madeForYou} type="playlist" onCardClick={handlePlaylistClick} />
 
           <SectionHeader title="Recently played" link="/section/recently-played" />
           <CardGrid items={recentTracks} type="album" />

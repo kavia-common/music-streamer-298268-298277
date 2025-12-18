@@ -1,0 +1,59 @@
+/* Playlist Page - Spotify Green Theme */
+
+.playlist-layout {
+  display: flex;
+  background-color: #121212;
+  min-height: 100vh;
+  color: #ffffff;
+}
+
+.playlist-main {
+  flex: 1;
+  margin-left: 240px;
+  margin-bottom: 90px;
+  background-color: #121212;
+  min-height: 100vh;
+  overflow-y: auto;
+}
+
+.playlist-content {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Responsive design */
+@media (max-width: 1024px) {
+  .playlist-main {
+    margin-left: 200px;
+  }
+}
+
+@media (max-width: 768px) {
+  .playlist-main {
+    margin-left: 60px;
+  }
+}
+
+@media (max-width: 480px) {
+  .playlist-main {
+    margin-left: 60px;
+  }
+}
+
+/* Scrollbar styling */
+.playlist-main::-webkit-scrollbar {
+  width: 12px;
+}
+
+.playlist-main::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.playlist-main::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+}
+
+.playlist-main::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}

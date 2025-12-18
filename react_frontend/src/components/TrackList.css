@@ -1,0 +1,164 @@
+/* TrackList Component - Spotify Green Theme */
+
+.track-list-container {
+  padding: 24px 32px 48px;
+}
+
+.playlist-actions {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.play-all-button {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background-color: #1DB954;
+  border: none;
+  color: #000000;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  transition: all 0.2s ease;
+}
+
+.play-all-button:hover {
+  background-color: #1ed760;
+  transform: scale(1.05);
+}
+
+.play-icon {
+  margin-left: 3px;
+}
+
+.shuffle-button,
+.like-all-button,
+.more-options-button {
+  background: none;
+  border: none;
+  color: #b3b3b3;
+  font-size: 32px;
+  cursor: pointer;
+  padding: 4px;
+  transition: all 0.2s ease;
+}
+
+.shuffle-button:hover,
+.like-all-button:hover,
+.more-options-button:hover {
+  color: #ffffff;
+  transform: scale(1.05);
+}
+
+.track-list-header {
+  display: grid;
+  grid-template-columns: 40px 1fr 1fr 200px;
+  gap: 16px;
+  padding: 8px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #b3b3b3;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.header-number {
+  text-align: center;
+}
+
+.header-title {
+  padding-left: 0;
+}
+
+.header-album {
+  padding-left: 0;
+}
+
+.header-duration {
+  text-align: right;
+  padding-right: 60px;
+}
+
+.track-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Responsive design */
+@media (max-width: 1024px) {
+  .track-list-container {
+    padding: 20px 24px 40px;
+  }
+
+  .track-list-header {
+    grid-template-columns: 40px 1fr 160px;
+    gap: 12px;
+  }
+
+  .header-album {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .track-list-container {
+    padding: 16px 16px 32px;
+  }
+
+  .playlist-actions {
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .play-all-button {
+    width: 48px;
+    height: 48px;
+    font-size: 18px;
+  }
+
+  .shuffle-button,
+  .like-all-button,
+  .more-options-button {
+    font-size: 28px;
+  }
+
+  .track-list-header {
+    grid-template-columns: 40px 1fr 100px;
+    gap: 8px;
+    padding: 8px 12px;
+  }
+
+  .header-duration {
+    padding-right: 40px;
+  }
+}
+
+@media (max-width: 480px) {
+  .track-list-container {
+    padding: 12px 12px 24px;
+  }
+
+  .playlist-actions {
+    gap: 12px;
+  }
+
+  .more-options-button {
+    display: none;
+  }
+
+  .track-list-header {
+    grid-template-columns: 32px 1fr 60px;
+  }
+
+  .header-duration {
+    padding-right: 20px;
+  }
+}
